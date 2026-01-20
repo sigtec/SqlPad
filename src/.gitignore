@@ -1,0 +1,134 @@
+# .gitignore for .NET / C# Windows Forms projects
+# Source code will live under src/
+
+########################################
+# Visual Studio / VS for Mac / Rider
+########################################
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.ide
+*.sln.iml
+.idea/
+
+# ReSharper
+_ReSharper*/
+*.DotSettings.user
+*.ReSharper
+
+########################################
+# Build artifacts
+########################################
+# Generic
+[Bb]in/
+[Oo]bj/
+**/[Bb]in/
+**/[Oo]bj/
+
+# If you want to specifically ensure src/ build outputs are ignored:
+src/**/bin/
+src/**/obj/
+
+# Publish / artifact folders
+publish/
+publish_temp/
+artifacts/
+out/
+*.publish/
+*.deploy/
+
+########################################
+# NuGet / package caches
+########################################
+*.nupkg
+*.snupkg
+packages/
+packages/**
+
+# NuGet local cache and HTTP cache
+.nuget/
+.nuget/packages/
+
+project.lock.json
+project.fragment.lock.json
+
+########################################
+# User-specific files
+########################################
+*.rsuser
+*.perspectivev3
+*.userprefs
+*.userosscache
+*.suo
+
+########################################
+# Test results / coverage
+########################################
+TestResults/
+*.trx
+.vstest/
+coverage/
+*.coverage
+*.coveragexml
+coverage*.info
+*.lcov
+
+########################################
+# Logs, db, temp
+########################################
+*.log
+*.tlog
+*.tmp
+*.temp
+*.cache
+*.pid
+
+# SQL Server / LocalDB files
+*.mdf
+*.ldf
+*.sdf
+
+########################################
+# Windows / OS files
+########################################
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+Icon?
+\$RECYCLE.BIN/
+
+########################################
+# Others (editors, package managers)
+########################################
+node_modules/
+bower_components/
+
+# JetBrains Rider caches
+.idea/
+*.ide/
+
+# VS Code workspace storage
+.vscode/*
+
+########################################
+# Installer / packaging / binary files
+########################################
+*.exe
+*.dll
+*.pdb
+*.msi
+*.cab
+*.7z
+*.zip
+
+########################################
+# Optional: Secrets and local config
+########################################
+appsettings.*.json
+secrets.json
+*.usersecrets
+
+# End of .gitignore

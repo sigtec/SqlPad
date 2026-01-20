@@ -1,0 +1,25 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="ARM" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/App/">
+    <Project Path="SqlPad/SqlPad.csproj" />
+  </Folder>
+  <Folder Name="/DataProviders/">
+    <Project Path="SqlPad.Data.Oracle/SqlPad.Data.Oracle.csproj" Id="9e1e083f-6d95-47f4-8a66-09bde0ed0014" />
+    <Project Path="SqlPad.Data.SqlServer/SqlPad.Data.SqlServer.csproj" Id="e2ff9d2c-ba2f-4e49-af5a-00323cbbbbfc" />
+  </Folder>
+  <Folder Name="/Lib/">
+    <Project Path="SqlPad.Data.Contracts/SqlPad.Data.Contracts.csproj" Id="66123d08-5605-4bf6-bd3d-53bb5d90885c" />
+    <Project Path="SqlPad.Lib/SqlPad.Lib.csproj" Id="2d31e199-7bbd-43d3-8b1b-31afa9f0ad38" />
+  </Folder>
+  <Folder Name="/Setup/">
+    <Project Path="SqlPad.Setup/SqlPad.Setup.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5" Id="544bdf59-8dfb-4e6a-b14d-8e327f0f1f8b">
+      <Deploy />
+    </Project>
+  </Folder>
+</Solution>

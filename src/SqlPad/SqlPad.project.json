@@ -1,0 +1,22 @@
+{
+  "Name":  "SqlPad Test Project",
+  "Connections": [
+    {
+      "Name": "NanoMainDev",
+      "DataProvider": "SqlServer",
+      "ConnectionString": "Data Source=.;Initial Catalog=NanoMainDev;Integrated Security=true;TrustServerCertificate=True;MultipleActiveResultSets=True"
+    },
+    {
+      "Name": "QSMmainDev",
+      "DataProvider": "SqlServer",
+      "ConnectionString": "Data Source=.;Initial Catalog=qsmaindev;TrustServerCertificate=True;MultipleActiveResultSets=True",
+      "AskForCredentials":  true
+    },
+    {
+      "Name": "ROSS10DEV",
+      "DataProvider": "Oracle",
+      "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=ORACLE4.COMPRA.DE)(PORT=1521)))(CONNECT_DATA=(SID=ROSS10DEV)))",
+      "AskForCredentials": true
+    }
+  ]
+}
