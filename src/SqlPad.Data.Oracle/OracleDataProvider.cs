@@ -4,7 +4,8 @@
   using SqlPad.Data.Contracts;
   using System.Data;
   using System.Data.Common;
-  using System.Net;
+    using System.Globalization;
+    using System.Net;
 
   public class OracleDataProvider : IDataProvider
   {
@@ -123,6 +124,32 @@
     {
       var connectionStringBuilder = new OracleConnectionStringBuilder(connectionString);
       return new NetworkCredential(connectionStringBuilder.UserID, connectionStringBuilder.Password);
+    }
+
+    public string GetSqlLiteral(object? value)
+    {
+      if (value == null || value == DBNull.Value)
+      {
+        return "NULL";
+      }
+      else if (value is bool b)
+      {
+        return b ? "1" : "0";
+      }
+      else if (value is string s)
+      {
+        return $"'{s.Replace("'", "''")}'";
+      }
+      else if (value is DateTime dt)
+      {
+        return $"TO_TIMESTAMP('{dt.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}', 'YYYY-MM-DD HH24:MI:SS.FF3')";
+      }
+      else if (value is IFormattable formattable)
+      {
+        return formattable.ToString(null, CultureInfo.InvariantCulture);
+      }
+
+      return $"'{value.ToString()?.Replace("'", "''")}'";
     }
 
     private void CollectDbmsOutputMessages()

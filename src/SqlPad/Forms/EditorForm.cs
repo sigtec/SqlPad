@@ -127,7 +127,8 @@
                   {
                     Name = name,
                     Dock = DockStyle.Fill,
-                    DataTable = dataTable
+                    DataTable = dataTable,
+                    DataProviderName = ConnectionManager!.DataProviderName
                   };
                   var tabPage = new TabPage(name);
                   tabPage.Controls.Add(resultSetControl);

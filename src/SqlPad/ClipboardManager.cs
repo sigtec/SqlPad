@@ -1,6 +1,8 @@
 ﻿namespace SqlPad
 {
+  using SqlPad.DataAccess;
   using System.Collections.Generic;
+  using System.Globalization;
   using System.Text;
 
   internal static class ClipboardManager
@@ -12,7 +14,7 @@
     }
 
 
-    internal static void CopyDataGridSelection(DataGridView grid)
+    internal static void CopyDataGridSelection(DataGridView grid, DataProviderName dataProviderName)
     {
       var rows = grid.SelectedCells.Cast<DataGridViewCell>()
         .Select(cell => cell.RowIndex)
@@ -26,24 +28,27 @@
         .OrderBy(r => r)
         .ToList();
 
-      var content = grid.SelectedCells.Cast<DataGridViewCell>()
-        .ToDictionary(cell => (cell.RowIndex, cell.ColumnIndex), cell => cell.Value?.ToString() ?? string.Empty);
-
-      // copy all, if no more that one cell is selected
-      if (grid.SelectedCells.Count <= 1)
+      if (grid.SelectedCells.Count == 1)
       {
-        rows = Enumerable.Range(0, grid.RowCount).ToList();
-        columns = Enumerable.Range(0, grid.ColumnCount).ToList();
-
-        content = new Dictionary<(int, int), string>();
-        foreach (var r in rows)
-        {
-          foreach (var c in columns)
-          {
-            content[(r, c)] = grid[c, r].Value?.ToString() ?? string.Empty;
-          }
-        }
+        var value = grid.SelectedCells[0].FormattedValue?.ToString() ?? String.Empty;
+        Clipboard.SetText(value);
+        return;
       }
+
+      if (columns.Count == 1)
+      {
+        // copy comma separated values for single column selection
+        var clipboadString = string.Join(", ",
+          grid.SelectedCells
+          .Cast<DataGridViewCell>()
+          .OrderBy(cell => cell.RowIndex)
+          .Select(cell => GetSqlLiteral(cell.Value, dataProviderName)));
+        Clipboard.SetText(clipboadString);
+        return;
+      }
+
+      var content = grid.SelectedCells.Cast<DataGridViewCell>()
+        .ToDictionary(cell => (cell.RowIndex, cell.ColumnIndex), cell => cell.FormattedValue?.ToString() ?? string.Empty);
 
       var columnsHeaders = columns.Select(c => grid.Columns[c].HeaderText)
         .ToList();
@@ -177,6 +182,41 @@
           .ToList();
       }
       Clipboard.SetText(string.Join(", ", columnNames));
+    }
+
+    private static string GetSqlLiteral(object? value, DataProviderName dataProviderName)
+    {
+      if (value == null || value == DBNull.Value)
+      {
+        return "NULL";
+      }
+      else if (value is bool b)
+      {
+        return b ? "1" : "0";
+      }
+      else if (value is string s)
+      {
+        return $"'{s.Replace("'", "''")}'";
+      }
+      else if (value is DateTime dt)
+      {
+        switch (dataProviderName)
+        {
+          case DataProviderName.SqlServer:
+            return $"CONVERT(DATETIME, '{dt.ToString("yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture)}', 126)";
+          case DataProviderName.Oracle:
+            return $"TO_TIMESTAMP('{dt.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}', 'YYYY-MM-DD HH24:MI:SS.FF3')";
+          default:
+            return $"'{dt.ToString("yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture)}'";
+
+        }
+      }
+      else if (value is IFormattable formattable)
+      {
+        return formattable.ToString(null, CultureInfo.InvariantCulture);
+      }
+
+      return $"'{value.ToString()?.Replace("'", "''")}'";
     }
   }
 }

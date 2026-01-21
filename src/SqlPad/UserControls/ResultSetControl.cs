@@ -1,6 +1,7 @@
 ﻿namespace SqlPad.UserControls
 {
   using ClosedXML.Excel;
+  using SqlPad.DataAccess;
   using System.ComponentModel;
   using System.Data;
   using System.Diagnostics;
@@ -11,6 +12,9 @@
   {
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public required DataTable DataTable { get; init; }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public required DataProviderName DataProviderName { get; init; }
 
     private readonly List<(int row, int col, Exception ex)> dataErrors = new List<(int row, int col, Exception ex)>();
     public IReadOnlyList<(int row, int col, Exception ex)> DataErrors => dataErrors.AsReadOnly();
@@ -24,7 +28,7 @@
     {
       try
       {
-        ClipboardManager.CopyDataGridSelection(dataGridView);
+        ClipboardManager.CopyDataGridSelection(dataGridView, DataProviderName);
       }
       catch (Exception ex)
       {

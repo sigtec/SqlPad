@@ -4,6 +4,7 @@
   using SqlPad.Data.Contracts;
   using System.Data;
   using System.Data.Common;
+  using System.Globalization;
   using System.Net;
 
   public class SqlServerDataProvider : IDataProvider

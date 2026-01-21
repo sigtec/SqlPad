@@ -40,7 +40,7 @@ namespace SqlPad.Forms
 
 
         var fi = new FileInfo(this.CommandLineArgs[0]);
-        if (!fi.Exists)
+        if (fi.Exists)
         {
           LoadProject(fi);
           return;

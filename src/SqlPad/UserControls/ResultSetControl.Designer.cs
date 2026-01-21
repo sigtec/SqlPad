@@ -30,7 +30,6 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ResultSetControl));
             toolStripDataGrid = new ToolStrip();
-            toolStripButtonCopyToClipboard = new ToolStripButton();
             toolStripSplitButtonCopy = new ToolStripSplitButton();
             copyColumnNamesToolStripMenuItem = new ToolStripMenuItem();
             toolStripDropDownButtonSaveResults = new ToolStripDropDownButton();
@@ -43,22 +42,12 @@
             // toolStripDataGrid
             // 
             toolStripDataGrid.GripStyle = ToolStripGripStyle.Hidden;
-            toolStripDataGrid.Items.AddRange(new ToolStripItem[] { toolStripButtonCopyToClipboard, toolStripSplitButtonCopy, toolStripDropDownButtonSaveResults });
+            toolStripDataGrid.Items.AddRange(new ToolStripItem[] { toolStripSplitButtonCopy, toolStripDropDownButtonSaveResults });
             toolStripDataGrid.Location = new Point(0, 0);
             toolStripDataGrid.Name = "toolStripDataGrid";
             toolStripDataGrid.Size = new Size(1066, 25);
             toolStripDataGrid.TabIndex = 1;
             toolStripDataGrid.Text = "toolStrip1";
-            // 
-            // toolStripButtonCopyToClipboard
-            // 
-            toolStripButtonCopyToClipboard.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            toolStripButtonCopyToClipboard.Image = (Image)resources.GetObject("toolStripButtonCopyToClipboard.Image");
-            toolStripButtonCopyToClipboard.ImageTransparentColor = Color.Magenta;
-            toolStripButtonCopyToClipboard.Name = "toolStripButtonCopyToClipboard";
-            toolStripButtonCopyToClipboard.Size = new Size(23, 22);
-            toolStripButtonCopyToClipboard.Text = "copy to Clipboard";
-            toolStripButtonCopyToClipboard.Click += toolStripButtonCopyToClipboard_Click;
             // 
             // toolStripSplitButtonCopy
             // 
@@ -137,7 +126,6 @@
         private ToolStripDropDownButton toolStripDropDownButtonSaveResults;
         private ToolStripMenuItem excelFileToolStripMenuItem;
         private DataGridView dataGridView;
-        private ToolStripButton toolStripButtonCopyToClipboard;
         private ToolStripSplitButton toolStripSplitButtonCopy;
         private ToolStripMenuItem copyColumnNamesToolStripMenuItem;
     }
