@@ -2,9 +2,9 @@
   "Name":  "SqlPad Test Project",
   "Connections": [
     {
-      "Name": "NanoMainDev",
+      "Name": "AdventureWorks2022",
       "DataProvider": "SqlServer",
-      "ConnectionString": "Data Source=.;Initial Catalog=NanoMainDev;Integrated Security=true;TrustServerCertificate=True;MultipleActiveResultSets=True"
+      "ConnectionString": "Data Source=.;Initial Catalog=AdventureWorks2022;Integrated Security=true;TrustServerCertificate=True;MultipleActiveResultSets=True"
     },
     {
       "Name": "QSMmainDev",
@@ -13,9 +13,9 @@
       "AskForCredentials":  true
     },
     {
-      "Name": "ROSS10DEV",
+      "Name": "OracleSqlPadDemo",
       "DataProvider": "Oracle",
-      "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=ORACLE4.COMPRA.DE)(PORT=1521)))(CONNECT_DATA=(SID=ROSS10DEV)))",
+      "ConnectionString": "Data Source=(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g27166aca4af4b1_alwaysfreeatpsqlpaddemo_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))",
       "AskForCredentials": true
     }
   ]

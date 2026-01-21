@@ -94,91 +94,88 @@
         toolStripButtonRun.Checked = true;
 
         this.Cursor = Cursors.AppStarting;
-        var command = ConnectionManager!.CreateCommandAndParseAnnotation(sqlText);
-        textBoxMessages.Clear();
-        Messages.Clear();
-
         var resultSetControls = new List<UserControls.ResultSetControl>();
-        tabControl.TabPages.Clear();
-        tabControl.TabPages.Add(tabPageMessages);
-        this.Update();
-        Application.DoEvents();
 
-        var limit = toolStripButtonLimit.Checked ? int.Parse(toolStripTextBoxLimitRows.Text) : int.MaxValue;
         using (var messageRetriever = new MessageRetriever(ConnectionManager!))
         {
-          var stopwatch = Stopwatch.StartNew();
-          using (var transaction = toolStripButtonUseTransaction.Checked ? ConnectionManager!.BeginTransaction() : null)
+          using (var command = ConnectionManager!.CreateCommandAndParseAnnotation(sqlText))
           {
-            command.Transaction = transaction;
-            // asnyc data reader
-            this.cancellationTokenSource = new CancellationTokenSource();
-            using (var reader = await command.ExecuteReaderAsync(cancellationTokenSource.Token))
+            textBoxMessages.Clear();
+            Messages.Clear();
+
+            tabControl.TabPages.Clear();
+            tabControl.TabPages.Add(tabPageMessages);
+            this.Update();
+            Application.DoEvents();
+
+            var limit = toolStripButtonLimit.Checked ? int.Parse(toolStripTextBoxLimitRows.Text) : int.MaxValue;
+
+            var stopwatch = Stopwatch.StartNew();
+            using (var transaction = toolStripButtonUseTransaction.Checked ? ConnectionManager!.BeginTransaction() : null)
             {
+              command.Transaction = transaction;
+              this.cancellationTokenSource = new CancellationTokenSource();
+
               var resultSetIndex = 0;
-              do
+              var queryStatus = new QueryStatus();
+              await foreach (var dataTable in command.ExecuteQueryAsync(this.cancellationTokenSource.Token, limit, queryStatus))
               {
-                var dataTable = new DataTable($"ResultSet{++resultSetIndex}");
-                foreach (var column in Enumerable.Range(0, reader.FieldCount))
+                if (dataTable.Columns.Count > 0)
                 {
-                  dataTable.Columns.Add(reader.GetName(column), reader.GetFieldType(column));
-                }
-
-                var resultSetControl = new UserControls.ResultSetControl
-                {
-                  Dock = DockStyle.Fill,
-                  DataTable = dataTable
-                };
-                var tabPage = new TabPage(dataTable.TableName);
-                tabPage.Controls.Add(resultSetControl);
-                tabControl.TabPages.Add(tabPage);
-                resultSetControls.Add(resultSetControl);
-
-                var rowCount = 0;
-                while (await reader.ReadAsync(cancellationTokenSource.Token) && rowCount++ < limit)
-                {
-                  var dataRow = dataTable.NewRow();
-                  foreach (var column in Enumerable.Range(0, reader.FieldCount))
+                  var name = $"ResultSet{++resultSetIndex}";
+                  var resultSetControl = new UserControls.ResultSetControl
                   {
-                    dataRow[column] = reader.IsDBNull(column) ? DBNull.Value : reader.GetValue(column);
-                  }
-                  dataTable.Rows.Add(dataRow);
+                    Name = name,
+                    Dock = DockStyle.Fill,
+                    DataTable = dataTable
+                  };
+                  var tabPage = new TabPage(name);
+                  tabPage.Controls.Add(resultSetControl);
+                  tabControl.TabPages.Add(tabPage);
+                  resultSetControls.Add(resultSetControl);
+                  Application.DoEvents();
                 }
-
-                Messages.AppendLine($"{dataTable.TableName}: {dataTable.Rows.Count} row(s) loaded.");
-                Application.DoEvents();
-
-                foreach (var group in resultSetControl.DataErrors
-                  .GroupBy(x => (x.col, x.ex.Message)))
+                else
                 {
-                  var name = dataTable.Columns[group.Key.col].ColumnName;
-                  Messages.AppendLine($"Data Error in {dataTable.TableName}, Column {name}: {group.Key.Message}");
+                  Messages.AppendLine($"{queryStatus.RecordsAffected} row(s) affected.");
                 }
+              }
 
-              } while (await reader.NextResultAsync(cancellationTokenSource.Token));
+              foreach (var resultSetControl in resultSetControls)
+              {
+                Messages.AppendLine($"{resultSetControl.Name}: {resultSetControl.DataTable.Rows.Count} row(s) loaded.");
+                foreach (var group in resultSetControl.DataErrors.GroupBy(x => (x.col, x.ex.Message)))
+                {
+                  var name = resultSetControl.DataTable.Columns[group.Key.col].ColumnName;
+                  Messages.AppendLine($"Data Error in {resultSetControl.Name}, Column {name}: {group.Key.Message}");
+                }
+              }
+
+              stopwatch.Stop();
+              this.Cursor = Cursors.Default;
+              if (transaction != null)
+              {
+                if (MessageBox.Show(this, "The execution completed successfully. The transaction will be committed now.", "Transaction Commit", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                {
+                  transaction.Commit();
+                  Messages.AppendLine("Transaction committed.");
+                }
+                else
+                {
+                  transaction.Rollback();
+                  Messages.AppendLine("Transaction rolled back by user.");
+                }
+              }
             }
-            stopwatch.Stop();
-            this.Cursor = Cursors.Default;
-            if (transaction != null)
+
+            foreach (var param in command.Parameters.OfType<IDataParameter>())
             {
-              if (MessageBox.Show(this, "The execution completed successfully. The transaction will be committed now.", "Transaction Commit", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
-              {
-                transaction.Commit();
-                Messages.AppendLine("Transaction committed.");
-              }
-              else
-              {
-                transaction.Rollback();
-                Messages.AppendLine("Transaction rolled back by user.");
-              }
+              Messages.AppendLine($"Parameter Name={param.ParameterName}, Direction={param.Direction}, Type={param.DbType}, Value={param.Value}");
             }
+            Messages.AppendLine($"Execution completed in {stopwatch.Elapsed}.");
           }
-
-          foreach (var param in command.Parameters.OfType<IDataParameter>())
-          {
-            Messages.AppendLine($"Parameter Name={param.ParameterName}, Direction={param.Direction}, Type={param.DbType}, Value={param.Value}");
-          }
-
+          // retrieve info messages after command is disposed, as 
+          // DBMS_OUTPUT messages in Oracle are only available then
           foreach (var message in messageRetriever)
           {
             if (this.cancellationTokenSource?.IsCancellationRequested ?? true)
@@ -186,7 +183,7 @@
               break;
             }
             Messages.Append(message.Message);
-            if(message.Number is not null)
+            if (message.Number is not null)
             {
               Messages.Append($"{nameof(message.Number)}={message.Number} ");
             }
@@ -207,19 +204,18 @@
               Messages.Append($"{nameof(message.State)}={message.State} ");
             }
             Messages.AppendLine();
-          }
 
-          Messages.AppendLine($"Execution completed in {stopwatch.Elapsed}.");
-        }
-        tabControl.SelectedTab = tabControl.TabPages.Cast<TabPage>().LastOrDefault();
+            tabControl.SelectedTab = tabControl.TabPages.Cast<TabPage>().LastOrDefault();
 
-        foreach (var resultSetControl in resultSetControls)
-        {
-          if (this.cancellationTokenSource?.IsCancellationRequested ?? true)
-          {
-            break;
+            foreach (var resultSetControl in resultSetControls)
+            {
+              if (this.cancellationTokenSource?.IsCancellationRequested ?? true)
+              {
+                break;
+              }
+              resultSetControl.AutoResizeColumns();
+            }
           }
-          resultSetControl.AutoResizeColumns();
         }
       }
       catch (TaskCanceledException)

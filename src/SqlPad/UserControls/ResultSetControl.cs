@@ -51,7 +51,7 @@
           using (var workbook = new XLWorkbook())
           {
             // Add DataTable as a worksheet
-            var worksheet = workbook.Worksheets.Add(DataTable, DataTable.TableName);
+            var worksheet = workbook.Worksheets.Add(DataTable, this.Name);
 
             if (DataTable.Rows.Count < 2000)
             {
