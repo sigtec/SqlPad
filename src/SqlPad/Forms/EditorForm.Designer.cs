@@ -181,7 +181,7 @@ namespace SqlPad.Forms
     '\'',
     '\''
     };
-            editorTextBox.AutoIndentCharsPatterns = "";
+            editorTextBox.AutoIndentCharsPatterns = "  ";
             editorTextBox.AutoScrollMinSize = new Size(25, 15);
             editorTextBox.BackBrush = null;
             editorTextBox.CharHeight = 15;
@@ -190,7 +190,6 @@ namespace SqlPad.Forms
             editorTextBox.DisabledColor = Color.FromArgb(100, 180, 180, 180);
             editorTextBox.Dock = DockStyle.Fill;
             editorTextBox.Font = new Font("Consolas", 9.75F);
-            //editorTextBox.Hotkeys = resources.GetString("editorTextBox.Hotkeys");
             editorTextBox.IsReplaceMode = false;
             editorTextBox.Language = Language.SQL;
             editorTextBox.LeftBracket = '(';
@@ -203,6 +202,7 @@ namespace SqlPad.Forms
             editorTextBox.Size = new Size(800, 266);
             editorTextBox.TabIndex = 0;
             editorTextBox.Zoom = 100;
+            editorTextBox.TextChangedDelayed += editorTextBox_TextChangedDelayed;
             editorTextBox.KeyDown += editorTextBox_KeyDown;
             // 
             // tabControl
@@ -250,6 +250,7 @@ namespace SqlPad.Forms
             Name = "EditorForm";
             Text = "EditorForm";
             WindowState = FormWindowState.Maximized;
+            FormClosing += EditorForm_FormClosing;
             Shown += EditorForm_Shown;
             toolStrip.ResumeLayout(false);
             toolStrip.PerformLayout();

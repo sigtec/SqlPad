@@ -1,13 +1,14 @@
 ﻿namespace SqlPad.Forms
 {
+  using FastColoredTextBoxNS;
   using SqlPad.DataAccess;
+  using SqlPad.Lib.Data;
   using System.ComponentModel;
   using System.Data;
   using System.Diagnostics;
   using System.Text;
-  using SqlPad.Lib.Data;
 
-  public partial class EditorForm : Form
+  public partial class EditorForm : Form, IEditControl
   {
     //TODO: Replace with https://github.com/megakraken/ICSharpCode.TextEditor
 
@@ -20,6 +21,9 @@
     public readonly StringBuilder Messages = new StringBuilder();
 
     private CancellationTokenSource? cancellationTokenSource = null;
+
+    private int originalTextHashCode = 0;
+    private bool changesPending = false;
     public EditorForm()
     {
       InitializeComponent();
@@ -37,6 +41,7 @@
         using (var reader = new StreamReader(stream))
         {
           editorTextBox.Text = reader.ReadToEnd();
+          originalTextHashCode = editorTextBox.Text.GetHashCode();
         }
       }
       editorTextBox.ReadOnly = this.FileInfo.IsReadOnly;
@@ -276,6 +281,9 @@
             writer.Write(editorTextBox.Text);
           }
         }
+        originalTextHashCode = editorTextBox.Text.GetHashCode();
+        changesPending = false;
+        this.Text = this.FileInfo?.Name;
       }
       catch (Exception ex)
       {
@@ -295,6 +303,53 @@
     private void toolStripButtonLimit_CheckedChanged(object sender, EventArgs e)
     {
       toolStripTextBoxLimitRows.Enabled = toolStripButtonLimit.Checked;
+    }
+
+    private void editorTextBox_TextChangedDelayed(object sender, TextChangedEventArgs e)
+    {
+      changesPending = (editorTextBox.Text.GetHashCode() != originalTextHashCode);
+      var marker = changesPending ? "*" : string.Empty;
+      this.Text = $"{this.FileInfo?.Name}{marker}";
+    }
+
+    private void EditorForm_FormClosing(object sender, FormClosingEventArgs e)
+    {
+      if (e.CloseReason == CloseReason.UserClosing && changesPending)
+      {
+        var result = MessageBox.Show(this, $"There are unsaved changes in \"{this.FileInfo?.Name}\". Do you want to save them before closing?", "Unsaved Changes", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+        if (result == DialogResult.Yes)
+        {
+          toolStripSplitButtonSave.PerformButtonClick();
+        }
+        else if (result == DialogResult.Cancel)
+        {
+          e.Cancel = true;
+        }
+      }
+    }
+
+    void IEditControl.Copy() => editorTextBox.Copy();
+    void IEditControl.Cut() => editorTextBox.Cut();
+    void IEditControl.Delete() => editorTextBox.ClearSelected();
+    void IEditControl.Paste() => editorTextBox.Paste();
+    void IEditControl.Redo() => editorTextBox.Redo();
+    void IEditControl.SelectAll() => editorTextBox.SelectAll();
+    void IEditControl.Undo() => editorTextBox.Undo();
+
+    void IEditControl.ShowFindDialog()
+    {
+      using (var dlg = new FindForm(editorTextBox))
+      {
+        dlg.ShowDialog(this);
+      }
+    }
+
+    void IEditControl.ShowReplaceDialog()
+    {
+      using (var dlg = new ReplaceForm(editorTextBox))
+      {
+        dlg.ShowDialog(this);
+      }
     }
   }
 }

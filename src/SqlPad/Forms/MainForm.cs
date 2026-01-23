@@ -6,8 +6,6 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Unicode;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace SqlPad.Forms
 {
@@ -18,7 +16,7 @@ namespace SqlPad.Forms
     public Project? Project { get; private set; }
     public static readonly SHA256 sha256 = SHA256.Create();
     public static readonly RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(@"Software\SqlPad\StoredCredentials");
-    
+    private Color borderColor = Color.FromKnownColor(KnownColor.Control);
     public MainForm(string[] commandLineArgs)
     {
       InitializeComponent();
@@ -119,7 +117,7 @@ namespace SqlPad.Forms
         {
           var plain = ProtectedData.Unprotect(crypt, salt, DataProtectionScope.CurrentUser);
           var tokens = Encoding.UTF8.GetString(plain).Split('\n');
-          if(tokens.Length == 2)
+          if (tokens.Length == 2)
           {
             credential = new NetworkCredential(tokens[0], tokens[1]);
             restoredCredentials = true;
@@ -128,6 +126,7 @@ namespace SqlPad.Forms
 
         using (var dlg = new UsernamePasswordDialog()
         {
+          Text = $"Connect to {connectionItem.Name}",
           UserName = credential?.UserName ?? string.Empty,
           Password = credential?.Password ?? string.Empty,
           RememberCredentials = restoredCredentials
@@ -157,7 +156,12 @@ namespace SqlPad.Forms
       }
       this.ConnectionManager.Connect(connectionItem.ConnectionString, credential);
 
-      //propertyGridParameters.SelectedObject = this.ConnectionManager;
+      if (!string.IsNullOrEmpty(connectionItem.BorderColor))
+      {
+        this.borderColor = ColorTranslator.FromHtml(connectionItem.BorderColor);
+        Invalidate();
+      }
+
       return true;
     }
 
@@ -402,6 +406,104 @@ namespace SqlPad.Forms
       {
         MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
+    }
+
+    private void windowToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+    {
+      var lastSeparator = windowToolStripMenuItem.DropDownItems.OfType<ToolStripSeparator>().LastOrDefault();
+      if (lastSeparator == null)
+      {
+        return;
+      }
+      var lastSeparatorIndex = windowToolStripMenuItem.DropDownItems.IndexOf(lastSeparator);
+      // remove old dynamic items 
+      while (windowToolStripMenuItem.DropDownItems.Count > lastSeparatorIndex + 1)
+      {
+        windowToolStripMenuItem.DropDownItems.RemoveAt(lastSeparatorIndex + 1);
+      }
+      // add dynamic items
+      var mnemonicIndex = 1;
+      foreach (var childForm in this.MdiChildren)
+      {
+        var menuItem = new ToolStripMenuItem()
+        {
+          Text = (mnemonicIndex <= 9) ? $"&{mnemonicIndex++} {childForm.Text}" : childForm.Text,
+          Tag = childForm,
+          Checked = this.ActiveMdiChild == childForm
+        };
+        menuItem.Click += (s, ea) =>
+        {
+          var form = (s as ToolStripMenuItem)!.Tag as Form;
+          if (form != null)
+          {
+            if (this.ActiveMdiChild?.WindowState == FormWindowState.Maximized)
+            {
+              form.WindowState = FormWindowState.Maximized;
+            }
+            else
+            {
+              form.WindowState = FormWindowState.Normal;
+            }
+            form.Activate();
+          }
+        };
+        windowToolStripMenuItem.DropDownItems.Add(menuItem);
+      }
+    }
+
+    private void cascadeToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      this.LayoutMdi(MdiLayout.Cascade);
+    }
+
+    private void tileHorizontallyToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      this.LayoutMdi(MdiLayout.TileHorizontal);
+    }
+
+    private void tileVerticallyToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      this.LayoutMdi(MdiLayout.TileVertical);
+    }
+
+    private void editToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+    {
+      foreach (ToolStripItem item in editToolStripMenuItem.DropDownItems)
+      {
+        item.Enabled = (this.ActiveMdiChild is IEditControl);
+      }
+    }
+
+    private void cutToolStripMenuItem_Click(object sender, EventArgs e) => (this.ActiveMdiChild as IEditControl)?.Cut();
+
+    private void copyToolStripMenuItem_Click(object sender, EventArgs e) => (this.ActiveMdiChild as IEditControl)?.Copy();
+
+    private void pasteToolStripMenuItem_Click(object sender, EventArgs e) => (this.ActiveMdiChild as IEditControl)?.Paste();
+
+    private void deleteToolStripMenuItem_Click(object sender, EventArgs e) => (this.ActiveMdiChild as IEditControl)?.Delete();
+
+    private void selectAllToolStripMenuItem_Click(object sender, EventArgs e) => (this.ActiveMdiChild as IEditControl)?.SelectAll();
+
+    private void undoToolStripMenuItem_Click(object sender, EventArgs e) => (this.ActiveMdiChild as IEditControl)?.Undo();
+
+    private void redoToolStripMenuItem_Click(object sender, EventArgs e) => (this.ActiveMdiChild as IEditControl)?.Redo();
+
+    private void findToolStripMenuItem_Click(object sender, EventArgs e) => (this.ActiveMdiChild as IEditControl)?.ShowFindDialog();
+
+    private void replaceToolStripMenuItem_Click(object sender, EventArgs e) => (this.ActiveMdiChild as IEditControl)?.ShowReplaceDialog();
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+      base.OnPaint(e);
+
+      // draw the border in the given color
+      using var brush = new SolidBrush(borderColor);
+      // Create a region representing the outer rectangle
+      using Region region = new Region(ClientRectangle);
+      // Exclude the inner rectangle to leave only the border
+      region.Exclude(DisplayRectangle);
+      // Fill the remaining region (the border) in one call
+      e.Graphics.FillRegion(brush, region);
     }
   }
 }

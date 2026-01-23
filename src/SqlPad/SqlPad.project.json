@@ -16,7 +16,8 @@
       "Name": "OracleSqlPadDemo",
       "DataProvider": "Oracle",
       "ConnectionString": "Data Source=(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g27166aca4af4b1_alwaysfreeatpsqlpaddemo_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))",
-      "AskForCredentials": true
+      "AskForCredentials": true,
+      "BorderColor":  "orange"
     }
   ]
 }
